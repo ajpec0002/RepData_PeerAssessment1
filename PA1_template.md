@@ -1,22 +1,12 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
-```{r, echo=FALSE,message=FALSE}
-#load libraries
-library(dplyr)
-library(lubridate)
-library(ggplot2)
-```
+
 
 ## Loading and preprocessing the data
 1. Load activity.csv using read.csv()
 2. Separate complete and incomplete data. They will both be used in subsequent analysis.
-```{r, echo=TRUE}
 
+```r
 unzip("activity.zip")
 activityDF <- read.csv("activity.csv")
 
@@ -29,7 +19,8 @@ unlink("activity.csv")
 
 ## What is mean total number of steps taken per day?
 1. Make a histogram of the total number of steps taken each day
-```{r, echo=TRUE}
+
+```r
 # Set tidy dataset
 
 completeActivityDF1 <- completeActivityDF %>% 
@@ -42,20 +33,32 @@ completeActivityDF1 <- completeActivityDF %>%
 
 #1. Make a histogram of the total number of steps taken each day
 hist(as.numeric(completeActivityDF1$steps),main="", col="red",xlab="Average Number of Steps per Day")
-
 ```
-2. Calculate and report the mean and median total number of steps taken per day
-```{r, echo=TRUE}
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
+2. Calculate and report the mean and median total number of steps taken per day
+
+```r
 medianVal <- median(completeActivityDF1$steps)
 print(medianVal)
+```
+
+```
+## [1] 10765
+```
+
+```r
 meanVal <- mean(completeActivityDF1$steps)
 print(meanVal)
 ```
 
-## What is the average daily activity pattern?
-```{r, echo=TRUE}
+```
+## [1] 10766.19
+```
 
+## What is the average daily activity pattern?
+
+```r
 completeActivityDF2 <- completeActivityDF %>% 
   #select steps, date
   select(steps,interval) %>% 
@@ -67,16 +70,29 @@ completeActivityDF2 <- completeActivityDF %>%
   arrange(interval)
 
 plot(completeActivityDF2$interval,as.numeric(completeActivityDF2$steps),type="l", col="black", xlab="",ylab="Average Number of Steps")
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
+
+```r
 #interval with max ave steps
 
 intervalWithMaxStep <- filter(completeActivityDF2,steps == max(completeActivityDF2$steps))
 print (intervalWithMaxStep)
 ```
 
+```
+## Source: local data frame [1 x 2]
+## 
+##   interval    steps
+##      (int)    (dbl)
+## 1      835 206.1698
+```
+
 
 ## Imputing missing values
-```{r, echo=TRUE}
 
+```r
 imputedActivityDF <- merge(incompleteActivityDF,completeActivityDF2,by.x = "interval",by.y="interval", all.x = TRUE)
 
 imputedActivityDF <- select(imputedActivityDF,steps.y,date,interval)
@@ -95,23 +111,34 @@ combinedDF <- combinedCompleteActivityDF %>%
   arrange(date)
 
 hist(as.numeric(combinedDF$steps),main="", col="red",xlab="Average Number of Steps per Day")
-
-
 ```
-2. Calculate and report the mean and median total number of steps taken per day
-```{r, echo=TRUE}
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
+2. Calculate and report the mean and median total number of steps taken per day
+
+```r
 medianVal <-median(combinedDF$steps)
 print(medianVal)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 meanVal <-mean(combinedDF$steps)
 print(meanVal)
+```
+
+```
+## [1] 10766.19
 ```
 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r, echo=TRUE}
 
+```r
 weekendDF <- filter(combinedCompleteActivityDF, wday(date) == 1 | wday(date) == 7)
 
 
@@ -152,5 +179,7 @@ combinedNew <- rbind(weekendDF2,weekdaysDF2)
 sp <- ggplot(combinedNew, aes(x=combinedNew$interval, y=combinedNew$step)) + geom_line()
 sp + facet_grid(day ~ .)
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png) 
 
 
