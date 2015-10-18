@@ -3,73 +3,69 @@
 
 
 ## Loading and preprocessing the data
-1. Load activity.csv using read.csv()
-2. Separate complete and incomplete data. They will both be used in subsequent analysis.
+###1. Load activity.csv using read.csv()
+###2. Separate complete and incomplete data. They will both be used in subsequent analysis.
+###3. Delete the csv afterwards so it will not be included in the committed files.
 
 ```r
+#unzip activity data
 unzip("activity.zip")
+#read activity csv
 activityDF <- read.csv("activity.csv")
 
+#load complete and incomplete dataset
 completeActivityDF <- activityDF[complete.cases(activityDF),]
 incompleteActivityDF <- activityDF[!complete.cases(activityDF),]
 
+#delete csv
 unlink("activity.csv")
 ```
-
+  
 
 ## What is mean total number of steps taken per day?
-1. Make a histogram of the total number of steps taken each day
+###1. Make a histogram of the total number of steps taken each day
 
 ```r
-# Set tidy dataset
-
+#Get sum of steps per day
 completeActivityDF1 <- completeActivityDF %>% 
   #select steps, date
   select(steps,date) %>% 
-  # Group by subject and activity name
+  # Group by date
   group_by(date) %>% 
   # Get the sum of each variables
   summarise_each(funs(sum)) 
 
 #1. Make a histogram of the total number of steps taken each day
-hist(as.numeric(completeActivityDF1$steps),main="", col="red",xlab="Average Number of Steps per Day")
+hist(as.numeric(completeActivityDF1$steps),main="", col="red",xlab="Average Number of Steps per Day ")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-3-1.png) 
-2. Calculate and report the mean and median total number of steps taken per day
+
+
+###2. Calculate and report the mean and median total number of steps taken per day
 
 ```r
-medianVal <- median(completeActivityDF1$steps)
-print(medianVal)
+medianVal <- as.integer(median(completeActivityDF1$steps))
+meanVal <- as.integer(mean(completeActivityDF1$steps))
 ```
-
-```
-## [1] 10765
-```
-
-```r
-meanVal <- mean(completeActivityDF1$steps)
-print(meanVal)
-```
-
-```
-## [1] 10766.19
-```
-
+####The median value is 10765.
+####The mean value is 10766.
+  
 ## What is the average daily activity pattern?
 
 ```r
+#Get average number of stepds per interval
 completeActivityDF2 <- completeActivityDF %>% 
-  #select steps, date
+  #select steps, interval
   select(steps,interval) %>% 
-  # Group by subject and activity name
+  # Group by interval
   group_by(interval) %>% 
-  # Get the mean of each variables
+  # Get the mean 
   summarise_each(funs(mean)) %>% 
-  # Sort result by subject and activity name
+  # Sort result by interval
   arrange(interval)
 
-plot(completeActivityDF2$interval,as.numeric(completeActivityDF2$steps),type="l", col="black", xlab="",ylab="Average Number of Steps")
+plot(completeActivityDF2$interval,as.numeric(completeActivityDF2$steps),type="l", col="black", xlab="5-minute interval",ylab="Average Number of Steps (averaged across all days)")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
@@ -78,89 +74,74 @@ plot(completeActivityDF2$interval,as.numeric(completeActivityDF2$steps),type="l"
 #interval with max ave steps
 
 intervalWithMaxStep <- filter(completeActivityDF2,steps == max(completeActivityDF2$steps))
-print (intervalWithMaxStep)
+intervalWithMaxStep <- intervalWithMaxStep$interval
 ```
-
-```
-## Source: local data frame [1 x 2]
-## 
-##   interval    steps
-##      (int)    (dbl)
-## 1      835 206.1698
-```
-
-
+####The 5-minute interval that contains average maximum number of steps is 835.
+  
 ## Imputing missing values
+####There are 2304 rows with missing data in the activity dataset.
+####The missing values are filled by substituting them with the mean value for the matching 5-minute interval.
 
 ```r
+#Substitute the NA step value with the mean value of the step for the given interval
 imputedActivityDF <- merge(incompleteActivityDF,completeActivityDF2,by.x = "interval",by.y="interval", all.x = TRUE)
-
 imputedActivityDF <- select(imputedActivityDF,steps.y,date,interval)
 names(imputedActivityDF) <- c("steps","date","interval")
-combinedCompleteActivityDF <- rbind(completeActivityDF, imputedActivityDF)
 
-# Set tidy dataset
+#Create a new dataset that is equal to the original dataset but with the missing data filled in.
+combinedCompleteActivityDF <- rbind(completeActivityDF, imputedActivityDF)
+```
+
+###1. Make a histogram of the total number of steps taken each day
+
+```r
 combinedDF <- combinedCompleteActivityDF %>% 
   #select steps, date
   select(steps,date) %>% 
-  # Group by subject and activity name
+  # Group by date
   group_by(date) %>% 
-  # Get the mean of each variables
-  summarise_each(funs(sum)) %>% 
-  # Sort result by subject and activity name
-  arrange(date)
+  # Get the sum
+  summarise_each(funs(sum)) 
 
 hist(as.numeric(combinedDF$steps),main="", col="red",xlab="Average Number of Steps per Day")
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
-2. Calculate and report the mean and median total number of steps taken per day
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png) 
+
+
+###2. Calculate and report the mean and median total number of steps taken per day
 
 ```r
-medianVal <-median(combinedDF$steps)
-print(medianVal)
+medianVal <- as.integer(median(combinedDF$steps))
+meanVal <- as.integer(mean(combinedDF$steps))
 ```
-
-```
-## [1] 10766.19
-```
-
-```r
-meanVal <-mean(combinedDF$steps)
-print(meanVal)
-```
-
-```
-## [1] 10766.19
-```
-
-
+####The median value is 10766.
+####The mean value is 10766.
+  
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
 ```r
+#get weekend data
 weekendDF <- filter(combinedCompleteActivityDF, wday(date) == 1 | wday(date) == 7)
 
-
-# Set tidy dataset
+#Get the mean for weekend
 weekendDF2 <- weekendDF %>% 
-  #select steps, date
+  #select steps, interval
   select(steps,interval) %>% 
-  # Group by subject and activity name
+  # Group by interval
   group_by(interval) %>% 
-  # Get the mean of each variables
+  # Get the mean 
   summarise_each(funs(mean)) %>% 
-  # Sort result by subject and activity name
+  # Sort result by interval
   arrange(interval)
 
+#set day to weekend
 weekendDF2$day <- "weekend"
-#plot(weekendDF2$interval,as.numeric(weekendDF2$steps),type="l", col="black", xlab="weekends",ylab="average number of steps taken")
 
-
+#get weekday data
 weekdaysDF <- filter(combinedCompleteActivityDF, wday(date) != 1 & wday(date) != 7)
-
-
-# Set tidy dataset
+#get the mean for weekday
 weekdaysDF2 <- weekdaysDF %>% 
   #select steps, interval
   select(steps,interval) %>% 
@@ -171,15 +152,19 @@ weekdaysDF2 <- weekdaysDF %>%
   # Sort result by interval
   arrange(interval)
 
+#set day to weekday
 weekdaysDF2$day <- "weekday"
 
-#plot(weekdaysDF2$interval,as.numeric(weekdaysDF2$steps),type="l", col="blue", xlab="weekdays",ylab="")
+#combine both
 combinedNew <- rbind(weekendDF2,weekdaysDF2)
 
-sp <- ggplot(combinedNew, aes(x=combinedNew$interval, y=combinedNew$step)) + geom_line()
+#make panel plot
+sp <- ggplot(combinedNew, aes(x=combinedNew$interval, y=combinedNew$step)) + geom_line() + xlab("5-minute interval") + ylab("Average Number of Steps (averaged across all days)")
 sp + facet_grid(day ~ .)
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-8-1.png) 
+![](PA1_template_files/figure-html/unnamed-chunk-9-1.png) 
 
+####There is a noticeable difference between the weekend plot and the weekday plot. 
+####The average number of steps at most intervals are generally higher during weekdays than weekends.
 
